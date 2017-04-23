@@ -39,16 +39,18 @@ def filetime_from_git(content, git_content):
     #    date: first commit time, update: fs time
     if git_content.is_managed_by_git():
         if git_content.is_committed():
-            content.date = git_content.get_oldest_commit_date()
+            if not hasattr(content, 'date'):
+                content.date = git_content.get_oldest_commit_date()
 
-            if git_content.is_modified():
-                content.modified = fs_modified_time
-            else:
-                content.modified = git_content.get_newest_commit_date()
-        else:
+            if not hasattr(content, 'modified'):
+                if git_content.is_modified():
+                    content.modified = fs_modified_time
+                else:
+                    content.modified = git_content.get_newest_commit_date()
+        elif not hasattr(content, 'date'):
             # File isn't committed
             content.date = fs_creation_time
-    else:
+    elif not hasattr(content, 'date'):
         # file is not managed by git
         content.date = fs_creation_time
 
