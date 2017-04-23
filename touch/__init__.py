@@ -28,7 +28,8 @@ def touch_file(path, context):
 
 
 def touch_feed(path, context, feed):
-    set_file_utime(path, max(x['pubdate'] for x in feed.items))
+    if feed.items:
+        set_file_utime(path, max(x['pubdate'] for x in feed.items))
 
 
 def register():

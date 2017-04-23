@@ -53,7 +53,9 @@ def optimize(dirpath, filename):
     command, silent, verbose = COMMANDS[ext]
     flags = verbose if SHOW_OUTPUT else silent
     command = command.format(filename=filepath, flags=flags)
+    mtime = os.stat(filepath).st_mtime
     call(command, shell=True)
+    os.utime(filepath, (mtime, mtime))
 
 
 def register():

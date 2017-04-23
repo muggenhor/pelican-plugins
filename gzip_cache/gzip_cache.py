@@ -115,6 +115,8 @@ def create_gzip_file(filepath, overwrite):
             except Exception as ex:
                 logger.critical('Gzip compression failed: %s' % ex)
 
+        mtime = os.stat(filepath).st_mtime
+        os.utime(compressed_path, (mtime, mtime))
         if overwrite:
             logger.debug('Overwriting: %s with %s' % (filepath, compressed_path))
             os.remove(filepath)
