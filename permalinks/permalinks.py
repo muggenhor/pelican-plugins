@@ -64,17 +64,24 @@ class PermalinkGenerator(Generator):
 
         clean_output_dir(self.permalink_output_path, [])
         mkdir_p(self.permalink_output_path)
-        for content in itertools.chain(
-                self.context['articles'], self.context['pages']):
+        with open(os.path.join(self.permalink_output_path, '.htaccess'), 'w') as redirect_file:
+            for content in itertools.chain(
+                    self.context['articles'], self.context['pages']):
 
-            for permalink_id in content.get_permalink_ids_iter():
-                permalink_path = os.path.join(
-                    self.permalink_output_path, permalink_id) + '.html'
+                for permalink_id in content.get_permalink_ids_iter():
+                    relative_permalink_path = os.path.join(
+                        self.settings['PERMALINK_PATH'], permalink_id) + '.html'
 
-                redirect_string = REDIRECT_STRING.format(
-                    url=article_url(content),
-                    title=content.title)
-                open(permalink_path, 'w').write(redirect_string)
+                    with open(os.path.join(self.output_path, relative_permalink_path), 'w') as f:
+                        f.write(REDIRECT_STRING.format(
+                            url=article_url(content),
+                            title=content.title,
+                        ))
+                    redirect_file.write('Redirect permanent "/{relative_permalink_path}" "{url}"\n'.format(
+                        url=article_url(content),
+                        permalink_id=permalink_id,
+                        relative_permalink_path=relative_permalink_path,
+                    ))
 
 
 def get_permalink_ids_iter(self):
