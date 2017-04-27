@@ -66,12 +66,14 @@ class PermalinkGenerator(Generator):
                 for permalink_id in content.get_permalink_ids_iter():
                     relative_permalink_path = os.path.join(
                         self.settings['PERMALINK_PATH'], permalink_id) + '.html'
+                    permalink_path = os.path.join(self.output_path, relative_permalink_path)
 
-                    with open(os.path.join(self.output_path, relative_permalink_path), 'wb') as f:
-                        f.write(template.render(
-                            content=content,
-                            **settings
-                        ))
+                    localcontext = settings.copy()
+                    localcontext['content'] = content
+                    localcontext['page'] = content
+                    with open(permalink_path, 'wb') as f:
+                        f.write(template.render(**localcontext))
+                    signals.content_written.send(permalink_path, context=localcontext)
                     redirect_file.write('Redirect permanent "/{relative_permalink_path}" "{url}"\n'.format(
                         url=article_url(content),
                         permalink_id=permalink_id,
