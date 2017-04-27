@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html lang="{% block html_lang %}{{ DEFAULT_LANG }}{% endblock %}">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="refresh" content="0;url={{ SITEURL }}/{{ content.url }}">
+        <script type="text/javascript">
+            window.location.href = "{{ SITEURL }}/{{ content.url }}"
+        </script>
+        <title>Page Redirection to {{ content.title }}</title>
+    </head>
+    <body>
+        If you are not redirected automatically, follow the
+        <a href='{{ SITEURL }}/{{ content.url }}'>link to {{ content.title }}</a>
+    </body>
+</html>

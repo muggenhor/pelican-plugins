@@ -7,10 +7,15 @@ import logging
 import itertools
 import os
 import os.path
+from jinja2 import Environment, FileSystemLoader
 from pelican import signals
 from pelican.generators import Generator
-from pelican.utils import mkdir_p
-from pelican.utils import clean_output_dir
+from pelican.utils import (
+        clean_output_dir,
+        get_relative_path,
+        mkdir_p,
+        path_to_url,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -21,25 +26,6 @@ def article_url(content):
     '''
     return '{content.settings[SITEURL]}/{content.url}'.format(
         content=content).encode('utf-8')
-
-
-REDIRECT_STRING = '''
-<!DOCTYPE HTML>
-<html lang="en-US">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="refresh" content="0;url={url}">
-        <script type="text/javascript">
-            window.location.href = "{url}"
-        </script>
-        <title>Page Redirection to {title}</title>
-    </head>
-    <body>
-        If you are not redirected automatically, follow the
-        <a href='{url}'>link to {title}</a>
-    </body>
-</html>
-'''
 
 
 class PermalinkGenerator(Generator):
@@ -64,6 +50,15 @@ class PermalinkGenerator(Generator):
 
         clean_output_dir(self.permalink_output_path, [])
         mkdir_p(self.permalink_output_path)
+
+        path = os.path.dirname(os.path.realpath(__file__))
+        env = Environment(loader=FileSystemLoader(path))
+        template = env.get_template('permalink.html')
+
+        settings = self.settings.copy()
+        if settings.get('RELATIVE_URLS', False):
+            settings['SITEURL'] = path_to_url(get_relative_path(os.path.join(settings['PERMALINK_PATH'], 'dummy.html')))
+
         with open(os.path.join(self.permalink_output_path, '.htaccess'), 'w') as redirect_file:
             for content in itertools.chain(
                     self.context['articles'], self.context['pages']):
@@ -72,10 +67,10 @@ class PermalinkGenerator(Generator):
                     relative_permalink_path = os.path.join(
                         self.settings['PERMALINK_PATH'], permalink_id) + '.html'
 
-                    with open(os.path.join(self.output_path, relative_permalink_path), 'w') as f:
-                        f.write(REDIRECT_STRING.format(
-                            url=article_url(content),
-                            title=content.title,
+                    with open(os.path.join(self.output_path, relative_permalink_path), 'wb') as f:
+                        f.write(template.render(
+                            content=content,
+                            **settings
                         ))
                     redirect_file.write('Redirect permanent "/{relative_permalink_path}" "{url}"\n'.format(
                         url=article_url(content),
